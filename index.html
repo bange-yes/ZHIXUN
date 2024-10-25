@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社区应用</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #e0e0e0;
+        }
+        .search-page {
+            padding: 10px;
+        }
+        .search-page .search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-page .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+        }
+        .search-page .search-bar .search-icon {
+            margin-left: -30px;
+            color: #888;
+        }
+        .search-history, .ai-suggestions {
+            margin-bottom: 20px;
+        }
+        .search-history h3, .ai-suggestions h3 {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        .location-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .location-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .location-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .location-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .show {
+            display: block;
+        }
+        /* 添加消息页面的样式 */
+        .message-page {
+            padding: 10px;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .message-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .message-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .message-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        .message-content {
+            flex: 1;
+        }
+        .message-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .message-preview {
+            color: #888;
+            font-size: 14px;
+        }
+        /* 添加聊天界面的样式 */
+        .chat-page {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .chat-header button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #333;
+        }
+        .chat-header h2 {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 70%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+        .message-left {
+            align-self: flex-start;
+            background-color: #fff;
+        }
+        .message-right {
+            align-self: flex-end;
+            background-color: #95ec69;
+        }
+        .chat-input-container {
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
+        }
+        .chat-input {
+            display: flex;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+        }
+        /* 添加 "我的" 页面样式 */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .profile-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .profile-id {
+            font-size: 14px;
+            color: #888;
+        }
+        .profile-edit-button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 20px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            background-color: #f9f9f9;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+        }
+        .profile-menu {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            background-color: #fff;
+        }
+        .profile-menu li {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        /* 个人信息详情页面样式 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .page-header button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .page-header h2 {
+            margin: 0;
+        }
+        .personal-info-list {
+            background-color: #fff;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .info-label {
+            flex: 1;
+            color: #333;
+        }
+        .info-value {
+            color: #888;
+            margin-right: 10px;
+        }
+        .info-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .info-arrow {
+            color: #ccc;
+        }
+        .message-item .message-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-header img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .message img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        /* 添加头像选择界面的样式 */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 15px;
+        }
+        .avatar-option {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .avatar-option:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-page" class="page-content">
+        <header>
+            <div class="location-dropdown">
+                <div class="location" id="location-button">地区</div>
+                <div class="location-content" id="location-dropdown">
+                    <a href="#">武昌区</a>
+                    <a href="#">洪山区</a>
+                    <a href="#">江汉区</a>
+                    <a href="#">江岸区</a>
+                    <a href="#">硚口区</a>
+                    <a href="#">汉阳区</a>
+                    <a href="#">青山区</a>
+                    <a href="#">蔡甸区</a>
+                    <a href="#">江夏区</a>
+                    <a href="#">黄陂区</a>
+                    <a href="#">新洲区</a>
+                    <a href="#">东西湖区</a>
+                    <a href="#">汉南区</a>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="索...">
+            </div>
+        </header>
+        
+        <div class="action-buttons">
+            <button class="find-item">
+                <span class="button-text">我要寻物</span>
+            </button>
+            <button class="find-person">
+                <span class="button-text">我要找人</span>
+            </button>
+        </div>
+        
+        <div class="posts">
+            <div class="post">
+                <div class="user-info">
+                    <img src="images/pluto-avatar.png" alt="Pluto" class="avatar">
+                    <span class="username">Pluto</span>
+                    <span class="time">36分钟前</span>
+                </div>
+                <p class="content">风华园，蔡明伟，手机都不要啦</p>
+                <img src="images/post-image-noodles.png" alt="桌子上的泡面和手机" class="post-image">
+                <div class="post-meta">
+                    <span class="device">iPhone 15 Pro</span>
+                    <span class="arrival-time">16:30左右到</span>
+                    <span class="location">风华园</span>
+                </div>
+                <div class="post-actions">
+                    <button class="like"></button>
+                    <button class="comment"></button>
+                    <button class="share"></button>
+                </div>
+            </div>
+            <!-- 可以添加更多的帖子 -->
+        </div>
+    </div>
+
+    <div id="post-page" class="page-content" style="display: none;">
+        <header>
+            <button id="back-button">&lt;</button>
+            <div class="more-options">...</div>
+        </header>
+        <div class="input-area">
+            <textarea placeholder="键入内容......"></textarea>
+        </div>
+        <div class="action-buttons">
+            <button class="insert-image">
+                <span class="icon">🖼️</span>
+                <span class="button-text">插入图片</span>
+            </button>
+            <button class="ai-complete">
+                <span class="icon">🤖</span>
+                <span class="button-text">智能填充</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="search-page" class="page-content" style="display: none;">
+        <div class="search-page">
+            <div class="search-bar">
+                <input type="text" placeholder="键入你想要的内容">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div class="search-history">
+                <h3>搜索历史</h3>
+                <div class="tags">
+                    <span class="tag">身份证</span>
+                    <span class="tag">手提包</span>
+                    <span class="tag">伞</span>
+                </div>
+            </div>
+            <div class="ai-suggestions">
+                <h3>智能推荐</h3>
+                <div class="tags">
+                    <span class="tag">湖北大学（阳逻校区）</span>
+                    <span class="tag">湖北大学（武昌校区）</span>
+                    <span class="tag">今天上午 8 时左右</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-page" class="page-content" style="display: none;">
+        <div class="message-page">
+            <div class="message-header">
+                <h2>消息</h2>
+            </div>
+            <ul class="message-list">
+                <li class="message-item" data-chat="system">
+                    <div class="message-icon" style="background-color: #A0C4FF;">🔔</div>
+                    <div class="message-content">
+                        <div class="message-title">系统消息</div>
+                        <div class="message-preview">欢迎使用社区应用</div>
+                    </div>
+                </li>
+                <li class="message-item" data-chat="customer-service">
+                    <div class="message-icon" style="background-color: #BDB2FF;">🎧</div>
+                    <div class="message-content">
+                        <div class="message-title">我的客服</div>
+                        <div class="message-preview">有什么可以帮助您的吗？</div>
+                    </div>
+                </li>
+                <li class="message-item" data-chat="mentions">
+                    <div class="message-icon" style="background-color: #A0E7E5;">@</div>
+                    <div class="message-content">
+                        <div class="message-title">提到了我</div>
+                        <div class="message-preview">查看最新的提及</div>
+                    </div>
+                </li>
+                <li class="message-item" data-chat="likes">
+                    <div class="message-icon" style="background-color: #FFAFCC;">👍</div>
+                    <div class="message-content">
+                        <div class="message-title">我收到的赞</div>
+                        <div class="message-preview">查看最新的点赞</div>
+                    </div>
+                </li>
+                <li class="message-item" data-chat="lifetime">
+                    <div class="message-icon">
+                        <img src="images/lifetime-avatar.png" alt="Lifetime">
+                    </div>
+                    <div class="message-content">
+                        <div class="message-title">Lifetime (江翔)</div>
+                        <div class="message-preview">你好，请问是你捡到了我的身份证吗</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 更新聊天界面 -->
+    <div id="chat-page" class="chat-page">
+        <div class="chat-header">
+            <button id="chat-back-button">&lt;</button>
+            <img src="images/lifetime-avatar.png" alt="Lifetime" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+            <h2 id="chat-title">Lifetime (江翔)</h2>
+            <button class="more-options">⋮</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- 聊天消息将在这里动态添加 -->
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="输入消息...">
+                <button id="send-message">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在其他页面内容之后添加 "我的" 页面 -->
+    <div id="profile-page" class="page-content" style="display: none;">
+        <div class="profile-header">
+            <h2>我的</h2>
+            <button class="expand-button">⤢</button>
+        </div>
+        <div class="profile-info">
+            <img src="images/user-avatar.png" alt="用户头像" class="profile-avatar">
+            <div class="profile-name">上上签</div>
+            <div class="profile-id">ID:2024xxxxxxxxx</div>
+            <button class="profile-edit-button">&gt;</button>
+        </div>
+        <div class="profile-stats">
+            <div class="stat-item">
+                <div class="stat-number">2</div>
+                <div class="stat-label">我丢失的</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">我捡到的</div>
+            </div>
+        </div>
+        <ul class="profile-menu">
+            <li><span class="menu-icon">🖼️</span> 我的图文</li>
+            <li><span class="menu-icon">🕒</span> 浏览历史</li>
+            <li><span class="menu-icon">🔒</span> 隐私保护</li>
+            <li><span class="menu-icon">⭐</span> 信誉评分</li>
+            <li><span class="menu-icon">⚙️</span> 设置</li>
+            <li><span class="menu-icon">ℹ️</span> 关于</li>
+        </ul>
+    </div>
+
+    <!-- 在其他页面内容之后添加个人信息详情页面 -->
+    <div id="personal-info-page" class="page-content" style="display: none;">
+        <div class="page-header">
+            <button id="personal-info-back-button">&lt;</button>
+            <h2>个人信息</h2>
+        </div>
+        <div class="personal-info-list">
+            <div class="info-item" id="avatar-item">
+                <span class="info-label">头像</span>
+                <img src="images/user-avatar.png" alt="用户头像" class="info-avatar" id="user-avatar">
+                <span class="info-arrow">&gt;</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">姓名</span>
+                <span class="info-value">上上签</span>
+                <span class="info-arrow">&gt;</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ID</span>
+                <span class="info-value">2024xxxxxxxxx</span>
+                <span class="info-arrow">&gt;</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">已加入社区</span>
+                <span class="info-value">湖北大学（阳逻校区）</span>
+                <span class="info-arrow">&gt;</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">实名态</span>
+                <span class="info-value">已实名</span>
+                <span class="info-arrow">&gt;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在 personal-info-page 中添加头像选择界面 -->
+    <div id="avatar-selection" style="display: none;">
+        <div class="page-header">
+            <button id="avatar-selection-back-button">&lt;</button>
+            <h2>选择头像</h2>
+        </div>
+        <div class="avatar-grid">
+            <img src="images/avatar1.png" alt="Avatar 1" class="avatar-option">
+            <img src="images/avatar2.png" alt="Avatar 2" class="avatar-option">
+            <img src="images/avatar3.png" alt="Avatar 3" class="avatar-option">
+            <img src="images/avatar4.png" alt="Avatar 4" class="avatar-option">
+            <!-- 添加更多预设头像 -->
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="home">主页</button>
+        <button class="messages">消息</button>
+        <button class="profile">我的</button>
+    </nav>
+
+    <script>
+        document.querySelector('.find-item').addEventListener('click', showPostPage);
+        document.querySelector('.find-person').addEventListener('click', showPostPage);
+        document.getElementById('back-button').addEventListener('click', showMainPage);
+        document.querySelector('.search-bar input').addEventListener('click', showSearchPage);
+        document.getElementById('search-page').querySelector('.search-bar input').addEventListener('click', function(e) {
+            e.stopPropagation(); // 防止搜索页面的输入框触发showSearchPage
+        });
+
+        function showPostPage() {
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'block';
+        }
+
+        function showMainPage() {
+            document.getElementById('search-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'none';
+            document.getElementById('message-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'none';
+            document.getElementById('main-page').style.display = 'block';
+        }
+
+        function showSearchPage() {
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'none';
+            document.getElementById('search-page').style.display = 'block';
+        }
+
+        document.querySelector('.bottom-nav .home').addEventListener('click', showMainPage);
+
+        function showMainPage() {
+            document.getElementById('search-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'none';
+            document.getElementById('message-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'none';
+            document.getElementById('main-page').style.display = 'block';
+        }
+
+        document.getElementById('location-button').addEventListener('click', function() {
+            document.getElementById('location-dropdown').classList.toggle('show');
+        });
+
+        // 点击地区选项时更新地区文本并关闭下拉列表
+        document.querySelectorAll('#location-dropdown a').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('location-button').textContent = this.textContent;
+                document.getElementById('location-dropdown').classList.remove('show');
+            });
+        });
+
+        // 点击页面其他地方时关闭下拉列表
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.location')) {
+                var dropdown = document.getElementById('location-dropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
+        // 修改显示消息页面的函数
+        function showMessagePage() {
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'none';
+            document.getElementById('search-page').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'none';
+            document.getElementById('personal-info-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'none';
+            document.getElementById('message-page').style.display = 'block';
+        }
+
+        // 修改底部导航栏的事件监听器
+        document.querySelector('.bottom-nav .home').addEventListener('click', showMainPage);
+        document.querySelector('.bottom-nav .messages').addEventListener('click', showMessagePage);
+        document.querySelector('.bottom-nav .profile').addEventListener('click', showProfilePage);
+
+        // 为每个息项添加点击事件
+        document.querySelectorAll('.message-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const chatId = this.getAttribute('data-chat');
+                const chatTitle = this.querySelector('.message-title').textContent;
+                showChatPage(chatId, chatTitle);
+            });
+        });
+
+        function showChatPage(chatId, chatTitle) {
+            document.getElementById('message-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'flex';
+            document.getElementById('chat-title').textContent = chatTitle;
+            loadChatMessages(chatId);
+        }
+
+        function loadChatMessages(chatId) {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = ''; // 清空现有消息
+
+            // 模拟聊天记录
+            const messages = [
+                { sender: 'other', content: '你好，请问是你捡到了我的身份证吗', avatar: 'images/lifetime-avatar.png' },
+                { sender: 'me', content: '是的，我在学校图书馆附近捡到了一张身份证。' },
+                { sender: 'other', content: '太感谢了！我可以去哪里取回呢？', avatar: 'images/lifetime-avatar.png' },
+                { sender: 'me', content: '我现在在图书馆自习，你方便过来拿吗？' },
+                { sender: 'other', content: '好的，我现在就过去。大概需要15分钟，麻烦你稍等一下。', avatar: 'images/lifetime-avatar.png' },
+                { sender: 'me', content: '没问题，我会在图书馆门口等你。' },
+            ];
+
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                messageElement.classList.add(message.sender === 'me' ? 'message-right' : 'message-left');
+                
+                if (message.avatar) {
+                    const avatarElement = document.createElement('img');
+                    avatarElement.src = message.avatar;
+                    avatarElement.alt = 'Avatar';
+                    messageElement.appendChild(avatarElement);
+                }
+                
+                const contentElement = document.createElement('span');
+                contentElement.textContent = message.content;
+                messageElement.appendChild(contentElement);
+                
+                chatMessages.appendChild(messageElement);
+            });
+
+            // 滚动到最新消息
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        document.getElementById('chat-back-button').addEventListener('click', function() {
+            document.getElementById('chat-page').style.display = 'none';
+            document.getElementById('message-page').style.display = 'block';
+        });
+
+        // 添加发送消息的功能
+        document.getElementById('send-message').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message) {
+                const chatMessages = document.getElementById('chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'message-right');
+                messageElement.textContent = message;
+                chatMessages.appendChild(messageElement);
+                input.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 添加显示 "我的" 页面的函数
+        function showProfilePage() {
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('post-page').style.display = 'none';
+            document.getElementById('search-page').style.display = 'none';
+            document.getElementById('message-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'block';
+        }
+
+        // 为底部导航栏的按钮添加点击事件
+        document.querySelector('.bottom-nav .profile').addEventListener('click', showProfilePage);
+
+        // 添加显示个人信息详情页面的函数
+        function showPersonalInfoPage() {
+            document.getElementById('profile-page').style.display = 'none';
+            document.getElementById('personal-info-page').style.display = 'block';
+        }
+
+        // 为个人信息栏添加点击事件
+        document.querySelector('.profile-info').addEventListener('click', showPersonalInfoPage);
+
+        // 为返回按钮添加点击事件
+        document.getElementById('personal-info-back-button').addEventListener('click', function() {
+            document.getElementById('personal-info-page').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'block';
+        });
+
+        // 修改头像项的点击事件
+        document.getElementById('avatar-item').addEventListener('click', function() {
+            document.getElementById('personal-info-page').style.display = 'none';
+            document.getElementById('avatar-selection').style.display = 'block';
+        });
+
+        // 在脚本开始处添加这个函数
+        function loadSavedAvatar() {
+            const savedAvatar = localStorage.getItem('userAvatar');
+            if (savedAvatar) {
+                document.getElementById('user-avatar').src = savedAvatar;
+                document.querySelector('.profile-avatar').src = savedAvatar;
+            }
+        }
+
+        // 在页面加载时调用这个函数
+        window.addEventListener('load', loadSavedAvatar);
+
+        // 修改头像选择的事件处理
+        document.querySelectorAll('.avatar-option').forEach(function(avatar) {
+            avatar.addEventListener('click', function() {
+                const newAvatarSrc = this.src;
+                document.getElementById('user-avatar').src = newAvatarSrc;
+                document.querySelector('.profile-avatar').src = newAvatarSrc;
+                // 保存选择的头像到 localStorage
+                localStorage.setItem('userAvatar', newAvatarSrc);
+                document.getElementById('avatar-selection').style.display = 'none';
+                document.getElementById('personal-info-page').style.display = 'block';
+            });
+        });
+
+        // 添加返回按钮的事件监听器
+        document.getElementById('avatar-selection-back-button').addEventListener('click', function() {
+            document.getElementById('avatar-selection').style.display = 'none';
+            document.getElementById('personal-info-page').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
